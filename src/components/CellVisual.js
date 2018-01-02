@@ -6,8 +6,8 @@ it is a stateless component, and depends only on the props
 
 this.props.value: one of ["", 1-8, "?", "flag", "*"]
 this.props.revealed: boolean
-this.props.mineClicked: boolean, true if you clicked on a mine in this cell, causing you to lose (TODO: make background color red)
-this.props.incorrectlyFlagged: boolean. when game over, if you put a flag on this cell but it didn't contain a mine, we want to show a mine with a red X over it
+this.props.losing_cell: boolean, true if you clicked on a mine in this cell, causing you to lose (TODO: make background color red)
+this.props.incorrectly_flagged: boolean. when game over, if you put a flag on this cell but it didn't contain a mine, we want to show a mine with a red X over it
 */
 class CellVisual extends Component {
   //1 - blue

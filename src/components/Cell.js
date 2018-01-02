@@ -2,11 +2,12 @@ import React, { Component } from 'react';
 import CellVisual from './CellVisual.js';
 
 /*
-this component contains application logic (aka game logic)
-
 this.props.value: the true content of this cell. a mine "*", blank "", or a number
-this.props.revealed: boolean
-this.props.gameOver: boolean. if true, prevents clicks from having any effect
+this.props.r: the row position of this cell
+this.props.c: the column position of this cell
+this.props.revealed: whether or not the cell's true contents has been revealed
+this.props.game_over: boolean. if true, prevents clicks from having any effect
+this.props.losing_cell: boolean. whether this was the cell that the player lost on
 this.props.playerLeftClickedCell: callback function
 */
 class Cell extends Component {
@@ -14,7 +15,6 @@ class Cell extends Component {
   {
     super(props);
     this.state = {
-      revealed: false,
       marker: '', //takes on values '', 'flag', or '?'
     }
   }
@@ -23,7 +23,7 @@ class Cell extends Component {
   //returns the value that the player should see
   getDisplayedValue()
   {
-    if(this.state.revealed)
+    if(this.props.revealed)
     {
       return this.props.value;
     }
@@ -39,29 +39,40 @@ class Cell extends Component {
   {
     e.preventDefault(); //so that right clicking doesn't open up a context menu
 
-    if(this.props.gameOver) return;
+    if(this.props.game_over) return;
 
     if(e.type === 'click') //left click
     {
       //if the cell is already revealed, then left clicking does nothing
-      if(!this.state.revealed)
+      if(!this.props.revealed)
       {
         //if the cell has a flag or ? on it, then left clicking does nothing
         if(this.state.marker === '')
         {
-          this.setState({revealed: true});
           //need to tell the game that the player clicked the cell, so that the game can 
           //flood-fill if the player clicked on a cell with no adjacent mines, or if the
           //player clicked on a mine, thus ending the game
-          this.props.playerLeftClickedCell(this);
+          this.props.playerLeftClickedCell(r, c);
         }
       }
     }
     else if(e.type === 'contextmenu') //right click
     {
-      if(!this.state.revealed)
+      if(!this.props.revealed)
       {
         //cycle the marker
+        switch(this.state.marker)
+        {
+          case '':
+            this.setState({marker: 'flag'});
+            break;
+          case 'flag':
+            this.setState({marker: '?'});
+            break;
+          case '?':
+            this.setState({marker: ''});
+            break;
+        }
       }
     }
     
@@ -80,9 +91,16 @@ class Cell extends Component {
     let style = this.getStyle();
 
     return (
-      <div onClick={this.handleClick} onContextMenu={this.handleClick} style={style}>
+      <div 
+        onClick={(e) => {this.handleClick(e)}} 
+        onContextMenu={(e) => {this.handleClick(e)}} 
+        style={style}
+      >
         <CellVisual
           value = {this.getDisplayedValue()}
+          revealed = {this.props.revealed}
+          losing_cell = {this.props.losing_cell}
+          incorrectly_flagged = {this.props.incorrectly_flagged}
         />
       </div>
     );
