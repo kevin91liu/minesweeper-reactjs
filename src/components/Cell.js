@@ -52,7 +52,7 @@ class Cell extends Component {
           //need to tell the game that the player clicked the cell, so that the game can 
           //flood-fill if the player clicked on a cell with no adjacent mines, or if the
           //player clicked on a mine, thus ending the game
-          this.props.playerLeftClickedCell(r, c);
+          this.props.playerLeftClickedCell(this.props.r, this.props.c);
         }
       }
     }
