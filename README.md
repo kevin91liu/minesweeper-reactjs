@@ -1,0 +1,1 @@
+To run, navigate to the project directory, and run `yarn start`. Then go to `localhost:3000` in your browser.
