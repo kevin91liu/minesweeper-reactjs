@@ -3,21 +3,19 @@ import CellVisual from './CellVisual.js';
 
 /*
 this.props.value: the true content of this cell. a mine "*", blank "", or a number
+this.props.marker: one of '', '?', or 'flag'
 this.props.r: the row position of this cell
 this.props.c: the column position of this cell
 this.props.revealed: whether or not the cell's true contents has been revealed
-this.props.game_over: boolean. if true, prevents clicks from having any effect
 this.props.losing_cell: boolean. whether this was the cell that the player lost on
 this.props.playerLeftClickedCell: callback function
+this.props.playerRightClickedCell: callback function
 */
 class Cell extends Component {
-  constructor(props)
-  {
-    super(props);
-    this.state = {
-      marker: '', //takes on values '', 'flag', or '?'
-    }
-  }
+  // constructor(props)
+  // {
+  //   super(props);
+  // }
 
 
   //returns the value that the player should see
@@ -29,7 +27,7 @@ class Cell extends Component {
     }
     else
     {
-      return this.state.marker;
+      return this.props.marker;
     }
   }
 
@@ -39,15 +37,13 @@ class Cell extends Component {
   {
     e.preventDefault(); //so that right clicking doesn't open up a context menu
 
-    if(this.props.game_over) return;
-
     if(e.type === 'click') //left click
     {
       //if the cell is already revealed, then left clicking does nothing
       if(!this.props.revealed)
       {
         //if the cell has a flag or ? on it, then left clicking does nothing
-        if(this.state.marker === '')
+        if(this.props.marker === '')
         {
           //need to tell the game that the player clicked the cell, so that the game can 
           //flood-fill if the player clicked on a cell with no adjacent mines, or if the
@@ -60,23 +56,10 @@ class Cell extends Component {
     {
       if(!this.props.revealed)
       {
-        //cycle the marker
-        switch(this.state.marker)
-        {
-          case '':
-            this.setState({marker: 'flag'});
-            break;
-          case 'flag':
-            this.setState({marker: '?'});
-            break;
-          case '?':
-            this.setState({marker: ''});
-            break;
-        }
+        //then the marker can be cycled. inform the parent component. 
+        this.props.playerRightClickedCell(this.props.r, this.props.c);
       }
     }
-    
-
   }
 
   getStyle() 
