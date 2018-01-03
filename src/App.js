@@ -1,11 +1,8 @@
 import React, { Component } from 'react';
 import Cell from './components/Cell.js';
+import Dashboard from './components/Dashboard.js';
 
-const DEFAULT_ROWS = 10;
-const DEFAULT_COLUMNS = 10;
-const DEFAULT_MINES = 10;
 
-//the game is won when all the mines are flagged, and all non-mine cells are revealed/clicked
 class App extends Component {
   constructor(props)
   {
@@ -13,37 +10,29 @@ class App extends Component {
     this.state = {
       game_over: false,
       victory: false,
-      rows_input: DEFAULT_ROWS,
-      columns_input: DEFAULT_COLUMNS,
-      mines_input: DEFAULT_MINES, 
       cell_contents: null,
       victory_delta: null,
     }
   }
 
-  componentDidMount() 
-  {
-    this.resetGame();
-  }
-
   /*
   returns a 2-dimensional array of booleans. trues represent where there are mines. 
   */
-  generateMineLocations()
+  generateMineLocations(rows, columns, mines)
   {
-    let trues = Array(this.state.mines_input).fill(true);
-    let falses = Array(this.state.rows_input * this.state.columns_input - this.state.mines_input).fill(false);
+    let trues = Array(mines).fill(true);
+    let falses = Array(rows * columns - mines).fill(false);
     let pool = trues.concat(falses);
 
     let getRandomInt = (min, max) => {
       return Math.floor(Math.random() * (max - min + 1)) + min;
     }
 
-    let mine_locations = new Array(this.state.rows_input);
-    for(let r = 0; r < mine_locations.length; r++) {
-      mine_locations[r] = new Array(this.state.columns_input);
+    let mine_locations = new Array(rows);
+    for(let r = 0; r < rows; r++) {
+      mine_locations[r] = new Array(columns);
 
-      for(let c = 0; c < mine_locations[r].length; c++)
+      for(let c = 0; c < columns; c++)
       {
         //randomly pick from pool (which is an array of booleans)
         mine_locations[r][c] = pool.splice(getRandomInt(0, pool.length-1), 1)[0];
@@ -80,11 +69,11 @@ class App extends Component {
 
         if(mine_locations[r][c])
         {
-          console.log(`mine_locations[r][c] is ${mine_locations[r][c]}, setting ${r},${c} to *`);
+          console.log(`placing a mine in coordinate ${r},${c}`);
           cell_contents[r][c].value = '*';
         }
-        else
-        { //figure out the # of adjacent mines to this cell.
+        else //figure out the # of adjacent mines to this cell.
+        { 
           let adjacent_mines = 0;
 
           for(let i = r-1; i <= r+1; i++)
@@ -114,24 +103,17 @@ class App extends Component {
     return cell_contents;
   }
 
-  resetGame()
+  resetGame(rows, columns, mines)
   {
-    if(this.state.mines_input > this.state.columns_input * this.state.rows_input)
-    { //invalid # of mines
-      return;
-    }
-
-    let mine_locations = this.generateMineLocations();
-    console.log('mine_locations ', mine_locations);
+    console.log('resetting game');
+    let mine_locations = this.generateMineLocations(rows, columns, mines);
     let cell_contents = this.generateCellContents(mine_locations);
-    console.log('cell_contents ', cell_contents);
 
     this.setState({
       game_over: false,
       victory: false,
-      // mine_locations: mine_locations,
       cell_contents: cell_contents,
-      victory_delta: this.state.mines_input,
+      victory_delta: mines,
     });
   }
 
@@ -144,7 +126,8 @@ class App extends Component {
       doing this.state.cell_contents.splice() wouldn't create a deep copy, because 
       this.state.cell_contents is an array of references to arrays. i don't need to
       do deep copying so i'm not going to bother with that. the below approach is sufficient:
-      modifying state.cell_contents directly (which is normally verboten) and then doing setState
+      modifying this.state.cell_contents directly (which is normally verboten) via a reference 
+      and then doing setState
     */
     let cell_contents = this.state.cell_contents;
     cell_contents[r][c].revealed = true;
@@ -158,14 +141,11 @@ class App extends Component {
         victory: false,
         cell_contents: cell_contents,
       });
-    
-      //placeholder. will come up with something more elegant later. 
-      alert('you lost');
     }
     else
     {
       if(cell_contents[r][c].value === '')
-      { //the clicked cell has no adjacent mines, so we need to reveal a region
+      { //then the clicked cell has no adjacent mines, so we need to reveal a region
         //i implement a flood fill algorithm
         this.revealCellsFloodFill(cell_contents, r, c);
       }
@@ -199,7 +179,11 @@ class App extends Component {
     }
   }
 
-  //cell_contents is a reference, so we modify it by reference in this function
+  /*
+  i took the stack approach, rather than the recursive approach, arbitrarily.
+
+  cell_contents is a reference, so we modify it by reference in this function
+  */
   revealCellsFloodFill(cell_contents, r, c)
   {
     let stack = [];
@@ -292,8 +276,6 @@ class App extends Component {
         delta--;
     }
 
-    console.log(`delta is now ${delta}`);
-
     this.setState({
       cell_contents: cell_contents,
       victory_delta: delta,
@@ -304,11 +286,15 @@ class App extends Component {
       this.setState({
         game_over: true,
         victory: true,
+      }, () => {
+        /*
+        unfortunately, alert is thread-blocking, so it blocks the react re-render. so, when the user
+        wins by placing a flag on the last mine, the alert shows up before the flag is visually
+        rendered. only after the user clicks ok on the alert does the red flag show up. i tried putting
+        the alert in a componentDidUpdate() but that still didn't work. this could be improved. 
+        */
+        alert('you won!');
       });
-
-      //placeholder. will come up with more elegant way later. currently, this blocks the js thread
-      //so the setState re-render doesn't happen until the user clicks ok on the alert
-      alert('you won!');
     }
   }
 
@@ -316,42 +302,48 @@ class App extends Component {
   render() {
     return (
       <div>
-      {
-        this.state.cell_contents != null && 
-        ( //**TODO: move this into a separate visual component
-          <table>
-            <tbody>
-            {
-              this.state.cell_contents.map((row, r_index) => {
-                return (
-                  <tr key={r_index}>
-                  {
-                    row.map((cell_content, c_index) => {
-                      return (
-                        <td key={c_index}>
-                          <Cell
-                            r = {r_index}
-                            c = {c_index}
-                            value = {cell_content.value}
-                            marker = {cell_content.marker}
-                            revealed = {cell_content.revealed}
-                            losing_cell = {this.state.game_over && cell_content.losing_cell}
-                            incorrectly_flagged = {this.state.game_over && cell_content.marker === 'flag' && cell_content.value !== '*'}
-                            playerLeftClickedCell = {(r, c) => {this.playerLeftClickedCell(r, c)}}
-                            playerRightClickedCell = {(r, c) => {this.playerRightClickedCell(r, c)}}
-                          />
-                        </td>
-                      );
-                    })
-                  }
-                  </tr>
-                )
-              })
-            }
-            </tbody>
-          </table>
-        )
-      }
+        <Dashboard
+          resetGame = {(rows, columns, mines) => {this.resetGame(rows, columns, mines)}}
+        />
+        <div>
+        {
+          this.state.cell_contents != null && 
+          ( 
+            //something that could be improved: move this into a separate component
+            <table style={{borderSpacing: '1px'}}>
+              <tbody>
+              {
+                this.state.cell_contents.map((row, r_index) => {
+                  return (
+                    <tr key={r_index}>
+                    {
+                      row.map((cell_content, c_index) => {
+                        return (
+                          <td key={c_index}>
+                            <Cell
+                              r = {r_index}
+                              c = {c_index}
+                              value = {cell_content.value}
+                              marker = {cell_content.marker}
+                              revealed = {cell_content.revealed}
+                              losing_cell = {this.state.game_over && cell_content.losing_cell}
+                              incorrectly_flagged = {this.state.game_over && cell_content.marker === 'flag' && cell_content.value !== '*'}
+                              playerLeftClickedCell = {(r, c) => {this.playerLeftClickedCell(r, c)}}
+                              playerRightClickedCell = {(r, c) => {this.playerRightClickedCell(r, c)}}
+                            />
+                          </td>
+                        );
+                      })
+                    }
+                    </tr>
+                  )
+                })
+              }
+              </tbody>
+            </table>
+          )
+        }
+        </div>
       </div>
     );
   }

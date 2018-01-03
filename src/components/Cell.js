@@ -8,19 +8,17 @@ this.props.r: the row position of this cell
 this.props.c: the column position of this cell
 this.props.revealed: whether or not the cell's true contents has been revealed
 this.props.losing_cell: boolean. whether this was the cell that the player lost on
+this.props.incorrectly_flagged: boolean. if the player lost, true if the player flagged this cell but there was no mine
 this.props.playerLeftClickedCell: callback function
 this.props.playerRightClickedCell: callback function
 */
 class Cell extends Component {
-  // constructor(props)
-  // {
-  //   super(props);
-  // }
-
-
   //returns the value that the player should see
   getDisplayedValue()
   {
+    if(this.props.incorrectly_flagged)
+      return 'X';
+
     if(this.props.revealed)
     {
       return this.props.value;

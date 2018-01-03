@@ -1,33 +1,34 @@
 import React, { Component } from 'react';
+import mine_icon from '../assets/mine_icon.png';
+import flag_icon from '../assets/flag_icon.svg';
 
 /*
 this component handles only visual (display) code. it does not contain any application logic.
 it is a stateless component, and depends only on the props
 
-this.props.value: one of ["", 1-8, "?", "flag", "*"]
+this.props.value: one of ["", 1-8, "?", "flag", "*", "X"]
 this.props.revealed: boolean
-this.props.losing_cell: boolean, true if you clicked on a mine in this cell, causing you to lose (TODO: make background color red)
+this.props.losing_cell: boolean, true if you clicked on a mine in this cell, causing you to lose
 this.props.incorrectly_flagged: boolean. when game over, if you put a flag on this cell but it didn't contain a mine, we want to show a mine with a red X over it
 */
 class CellVisual extends Component {
-  //1 - blue
-  //2 - green
-  //3 - red
-  //4 - dark purple
-  //5 - maroon
-  //6 - turquoise
-  //7 - black
-  //8 - gray
-
   //a cell can be unrevealed (in which case it could be blank, have a flag, or a question mark)
-  //or revealed, in which case it could have a number, be blank, or, in the end game, show a mine.
+  //or revealed, in which case it could have a number, be blank, or, in the end game, show a mine
+  //or an X if the player incorrectly flagged the cell as having a mine.
   //in the end-game, if you clicked on a mine, that cell will have a background color of red
-
   getStyle()
   {
+    let style = {
+      borderWidth: 1,
+      borderStyle: 'solid',
+      height: '100%',
+      width: '100%',
+      textAlign: 'center'
+    }
+
     let styleDictionary = {
       1: {
-        color: '#blue' //#206bbc, a shade of blue
+        color: '#blue'
       },
       2: {
         color: 'green'
@@ -50,32 +51,54 @@ class CellVisual extends Component {
       8: {
         color: 'gray'
       },
-      '*': {
-        color: 'black'
-      },
-      '': {
-      },
-      'flag': {
-        color: 'red'
-      },
       '?': {
         color: 'black'
+      },
+      'X': {
+        color: 'red'
       }
     };
+    //assign font color based on the value
+    Object.assign(style, styleDictionary[this.props.value]);
 
-    //**TODO: based on this.props.revealed, change the style so you can visually tell
-
-    let style = {
-      borderWidth: 1,
-      borderColor: 'black',
-      backgroundColor: '#e3e5e8',
-      borderStyle: 'solid',
-      height: '100%',
-      width: '100%',
-      textAlign: 'center'
+    //visually differentiate revealed cells
+    if(this.props.revealed)
+    {
+      Object.assign(style, {
+        backgroundColor: '#b7babf', //a darker shade of gray
+        borderColor: 'black',
+      });
+    }
+    else
+    {
+      Object.assign(style, {
+        backgroundColor: '#e3e5e8', //a light shade of gray
+        borderTopColor: '#edeff2', //lighter than the above backgroundColor
+        borderLeftColor: '#edeff2',
+        borderBottomColor: '#cdd1d6', //darker than the above backgroundColor
+        borderRightColor: '#cdd1d6',
+      });
     }
 
-    return Object.assign({}, style, styleDictionary[this.props.value]);
+    if(this.props.losing_cell)
+    {
+      Object.assign(style, {
+        backgroundColor: 'red',
+      });
+    }
+
+    return style;
+  }
+
+  useImage()
+  {
+    return ['flag', '*'].includes(this.props.value);
+  }
+
+  getImage()
+  {
+    if(this.props.value === 'flag') return flag_icon;
+    if(this.props.value === '*') return mine_icon;
   }
 
   render() {
@@ -83,7 +106,9 @@ class CellVisual extends Component {
 
     return (
       <div style={style}>
-        {this.props.value}
+      {
+        this.useImage() ? (<img src={this.getImage()} style={{height: '20px', width: '20px'}} alt="error"/>) : this.props.value
+      }
       </div>
     );
   }
