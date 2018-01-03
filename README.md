@@ -1,4 +1,4 @@
-To run, navigate to the project directory, and run `yarn start`. Then go to `localhost:3000` in your browser.
+To run, clone this repo to your local machine, navigate to the project directory, and run `yarn start` (assuming you have all necessary dependencies installed). Then go to `localhost:3000` in your browser.
 
 ### Cheat mode
 
