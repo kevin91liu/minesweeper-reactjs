@@ -194,25 +194,23 @@ class App extends Component {
 
       let cells_to_be_revealed = [];
 
-      //check cell to the north
-      if(current.r-1 >= 0 && !cell_contents[current.r-1][current.c].revealed)
+      //iterate over the (up to) 8 neighboring cells
+      for(let i = current.r-1; i <= current.r+1; i++)
       {
-        cells_to_be_revealed.push({r: current.r-1, c: current.c});
-      }
-      //south
-      if(current.r+1 < cell_contents.length && !cell_contents[current.r+1][current.c].revealed)
-      {
-        cells_to_be_revealed.push({r: current.r+1, c: current.c});
-      }
-      //east
-      if(current.c+1 < cell_contents[current.r].length && !cell_contents[current.r][current.c+1].revealed)
-      {
-        cells_to_be_revealed.push({r: current.r, c: current.c+1});
-      }
-      //west
-      if(current.c-1 >= 0 && !cell_contents[current.r][current.c-1].revealed)
-      {
-        cells_to_be_revealed.push({r: current.r, c: current.c-1});
+        if(i < 0 || i >= cell_contents.length) //out of bounds
+          continue; 
+
+        for(let j = current.c-1; j <= current.c+1; j++)
+        {
+          if(j < 0 || j >= cell_contents[i].length) //out of bounds
+            continue;
+
+          if(i === current.r && j === current.c) //this is the current cell, not a neighbor
+            continue;
+
+          if(!cell_contents[i][j].revealed)
+            cells_to_be_revealed.push({r: i, c: j});
+        }
       }
 
       for(let coordinate of cells_to_be_revealed)

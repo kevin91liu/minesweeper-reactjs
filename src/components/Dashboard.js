@@ -63,7 +63,7 @@ class Dashboard extends Component
     if(e.target.validity.valid) //ensure the input contains only integers
     {
       this.setState({
-        [e.target.name]: e.target.value
+        [e.target.name]: parseInt(e.target.value, 10)
       });
     }
   }
